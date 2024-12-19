@@ -1,0 +1,341 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_BOOKS 100
+#define MAX_READERS 100
+#define MAX_TITLE 100
+#define MAX_NAME 100
+#define MAX_CATEGORY 50
+
+// Structures
+typedef struct {
+    int id;
+    char title[MAX_TITLE];
+    char author[MAX_NAME];
+    char category[MAX_CATEGORY];
+    int available; // 1 if available, 0 if loaned
+} Book;
+
+typedef struct {
+    int id;
+    char name[MAX_NAME];
+} Reader;
+
+// Global variables
+Book books[MAX_BOOKS];
+Reader readers[MAX_READERS];
+int bookCount = 0;
+int readerCount = 0;
+
+// Function prototypes
+void displayMainMenu();
+void manageBooks();
+void manageReaders();
+void addBook();
+void addReader();
+void registerLoan();
+void registerReturn();
+void displayReports();
+
+// Utility functions
+void printAvailableBooks();
+void printLoanedBooks();
+void printReaders();
+
+// File operations
+void saveData();
+void loadData();
+
+// Input validation
+int getIntInput(const char *prompt, int min, int max);
+
+// Main function
+int main() {
+    loadData(); // Load data on start
+    int choice;
+
+    do {
+        displayMainMenu();
+        choice = getIntInput("\nEnter your choice: ", 1, 6);
+
+        switch (choice) {
+            case 1:
+                manageBooks();
+                break;
+            case 2:
+                manageReaders();
+                break;
+            case 3:
+                registerLoan();
+                break;
+            case 4:
+                registerReturn();
+                break;
+            case 5:
+                displayReports();
+                break;
+            case 6:
+                saveData(); // Save data on exit
+                printf("Exiting the application. Goodbye!\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 6);
+
+    return 0;
+}
+
+// Main menu
+void displayMainMenu() {
+    printf("\n============================\n");
+    printf(" Library Management System\n");
+    printf("============================\n");
+    printf("1. Manage Books\n");
+    printf("2. Manage Readers\n");
+    printf("3. Register Loan\n");
+    printf("4. Register Return\n");
+    printf("5. Display Reports\n");
+    printf("6. Exit\n");
+}
+
+// Manage Books
+void manageBooks() {
+    int choice;
+    do {
+        printf("\nManage Books:\n");
+        printf("1. Add Book\n");
+        printf("2. Back to Main Menu\n");
+        choice = getIntInput("\nEnter your choice: ", 1, 2);
+
+        switch (choice) {
+            case 1:
+                addBook();
+                break;
+            case 2:
+                printf("Returning to main menu.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 2);
+}
+
+// Add Book
+void addBook() {
+    if (bookCount >= MAX_BOOKS) {
+        printf("Book list is full. Cannot add more books.\n");
+        return;
+    }
+
+    printf("\nEnter book details:\n");
+    books[bookCount].id = bookCount + 1;
+
+    printf("Title: ");
+    fgets(books[bookCount].title, MAX_TITLE, stdin);
+    books[bookCount].title[strcspn(books[bookCount].title, "\n")] = 0;
+
+    printf("Author: ");
+    fgets(books[bookCount].author, MAX_NAME, stdin);
+    books[bookCount].author[strcspn(books[bookCount].author, "\n")] = 0;
+
+    printf("Category: ");
+    fgets(books[bookCount].category, MAX_CATEGORY, stdin);
+    books[bookCount].category[strcspn(books[bookCount].category, "\n")] = 0;
+
+    books[bookCount].available = 1;
+    bookCount++;
+
+    printf("Book added successfully!\n");
+}
+
+// Manage Readers
+void manageReaders() {
+    int choice;
+    do {
+        printf("\nManage Readers:\n");
+        printf("1. Add Reader\n");
+        printf("2. Back to Main Menu\n");
+        choice = getIntInput("\nEnter your choice: ", 1, 2);
+
+        switch (choice) {
+            case 1:
+                addReader();
+                break;
+            case 2:
+                printf("Returning to main menu.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (choice != 2);
+}
+
+// Add Reader
+void addReader() {
+    if (readerCount >= MAX_READERS) {
+        printf("Reader list is full. Cannot add more readers.\n");
+        return;
+    }
+
+    printf("\nEnter reader details:\n");
+    readers[readerCount].id = readerCount + 1;
+
+    printf("Name: ");
+    fgets(readers[readerCount].name, MAX_NAME, stdin);
+    readers[readerCount].name[strcspn(readers[readerCount].name, "\n")] = 0;
+
+    readerCount++;
+
+    printf("Reader added successfully!\n");
+}
+
+// Register Loan
+void registerLoan() {
+    int bookId = getIntInput("\nEnter Book ID to loan: ", 1, bookCount);
+    int readerId = getIntInput("Enter Reader ID: ", 1, readerCount);
+
+    if (!books[bookId - 1].available) {
+        printf("Book is already loaned out.\n");
+        return;
+    }
+
+    books[bookId - 1].available = 0;
+    printf("Book ID %d loaned to Reader ID %d successfully.\n", bookId, readerId);
+}
+
+// Register Return
+void registerReturn() {
+    int bookId = getIntInput("\nEnter Book ID to return: ", 1, bookCount);
+
+    if (books[bookId - 1].available) {
+        printf("Book is not loaned out.\n");
+        return;
+    }
+
+    books[bookId - 1].available = 1;
+    printf("Book ID %d returned successfully.\n", bookId);
+}
+
+// Display Reports
+void displayReports() {
+    printf("\nReports:\n");
+    printf("1. Available Books\n");
+    printf("2. Loaned Books\n");
+    printf("3. Readers\n");
+    printf("4. Back to Main Menu\n");
+
+    int choice = getIntInput("\nEnter your choice: ", 1, 4);
+
+    switch (choice) {
+        case 1:
+            printAvailableBooks();
+            break;
+        case 2:
+            printLoanedBooks();
+            break;
+        case 3:
+            printReaders();
+            break;
+        case 4:
+            printf("Returning to main menu.\n");
+            break;
+        default:
+            printf("Invalid choice.\n");
+    }
+}
+
+// Utility functions
+void printAvailableBooks() {
+    printf("\nAvailable Books:\n");
+    for (int i = 0; i < bookCount; i++) {
+        if (books[i].available) {
+            printf("ID: %d, Title: %s, Author: %s, Category: %s\n",
+                   books[i].id, books[i].title, books[i].author, books[i].category);
+        }
+    }
+}
+
+void printLoanedBooks() {
+    printf("\nLoaned Books:\n");
+    for (int i = 0; i < bookCount; i++) {
+        if (!books[i].available) {
+            printf("ID: %d, Title: %s, Author: %s, Category: %s\n",
+                   books[i].id, books[i].title, books[i].author, books[i].category);
+        }
+    }
+}
+
+void printReaders() {
+    printf("\nRegistered Readers:\n");
+    for (int i = 0; i < readerCount; i++) {
+        printf("ID: %d, Name: %s\n", readers[i].id, readers[i].name);
+    }
+}
+
+// File operations
+void saveData() {
+    FILE *file = fopen("library_data.txt", "w");
+    if (!file) {
+        printf("Error saving data!\n");
+        return;
+    }
+
+    fprintf(file, "%d\n", bookCount);
+    for (int i = 0; i < bookCount; i++) {
+        fprintf(file, "%d\n%s\n%s\n%s\n%d\n", books[i].id, books[i].title, books[i].author, books[i].category, books[i].available);
+    }
+
+    fprintf(file, "%d\n", readerCount);
+    for (int i = 0; i < readerCount; i++) {
+        fprintf(file, "%d\n%s\n", readers[i].id, readers[i].name);
+    }
+
+    fclose(file);
+    printf("Data saved successfully!\n");
+}
+
+void loadData() {
+    FILE *file = fopen("library_data.txt", "r");
+    if (!file) {
+        printf("No previous data found. Starting fresh.\n");
+        return;
+    }
+
+    fscanf(file, "%d\n", &bookCount);
+    for (int i = 0; i < bookCount; i++) {
+        fscanf(file, "%d\n", &books[i].id);
+        fgets(books[i].title, MAX_TITLE, file);
+        books[i].title[strcspn(books[i].title, "\n")] = 0;
+        fgets(books[i].author, MAX_NAME, file);
+        books[i].author[strcspn(books[i].author, "\n")] = 0;
+        fgets(books[i].category, MAX_CATEGORY, file);
+        books[i].category[strcspn(books[i].category, "\n")] = 0;
+        fscanf(file, "%d\n", &books[i].available);
+    }
+
+    fscanf(file, "%d\n", &readerCount);
+    for (int i = 0; i < readerCount; i++) {
+        fscanf(file, "%d\n", &readers[i].id);
+        fgets(readers[i].name, MAX_NAME, file);
+        readers[i].name[strcspn(readers[i].name, "\n")] = 0;
+    }
+
+    fclose(file);
+    printf("Data loaded successfully!\n");
+}
+
+// Input validation
+int getIntInput(const char *prompt, int min, int max) {
+    int value;
+    while (1) {
+        printf("%s", prompt);
+        if (scanf("%d", &value) == 1 && value >= min && value <= max) {
+            while (getchar() != '\n'); // Clear input buffer
+            return value;
+        }
+        printf("Invalid input. Please enter a number between %d and %d.\n", min, max);
+        while (getchar() != '\n'); // Clear input buffer
+    }
+}
